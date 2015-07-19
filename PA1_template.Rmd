@@ -7,16 +7,29 @@ output:
 
 
 ## Loading and preprocessing the data
-
+```
+data<-read.csv("activity.csv")
+final<-na.omit(data)
+```
 
 
 ## What is mean total number of steps taken per day?
+![alt text](https://github.com/bilal-arif/RepData_PeerAssessment1/blob/master/figure/stepsperday.png)
 
-
+```
+final$date <- as.Date(final$date)
+agg<-aggregate(final$steps,by=list(final$date),FUN=sum)
+names(agg)<-c("Date","Steps")
+hist(agg$Steps,breaks=20,xlab="Steps",main="Steps per day")
+```
 
 ## What is the average daily activity pattern?
-
-
+![alt text](https://github.com/bilal-arif/RepData_PeerAssessment1/blob/master/figure/averagedailyactivity.png)
+```
+agg<-aggregate(final$steps,by=list(final$interval),FUN=mean)
+names(agg)<-c("Interval","Steps")
+plot(agg$Steps~agg$Interval,xlab="Steps",ylab="Intervals",main="Average Daily Activity",type="l")
+```
 
 ## Imputing missing values
 
