@@ -14,25 +14,90 @@ final<-na.omit(data)
 
 
 ## What is mean total number of steps taken per day?
-![alt text](https://github.com/bilal-arif/RepData_PeerAssessment1/blob/master/figure/stepsperday.png)
 
+#Calculate the total number of steps taken per day
 ```
 final$date <- as.Date(final$date)
 agg<-aggregate(final$steps,by=list(final$date),FUN=sum)
 names(agg)<-c("Date","Steps")
+```
+#If you do not understand the difference between a histogram and a barplot, research the difference between them. Make a histogram of the total number of steps taken each day
+```
 hist(agg$Steps,breaks=20,xlab="Steps",main="Steps per day")
+```
+![alt text](https://github.com/bilal-arif/RepData_PeerAssessment1/blob/master/figure/stepsperday.png)
+#Calculate and report the mean and median of the total number of steps taken per day
+```
+mean(agg$Steps)
+#[1] 10766.19
+median(agg$Steps)
+#[1] 10765
 ```
 
 ## What is the average daily activity pattern?
-![alt text](https://github.com/bilal-arif/RepData_PeerAssessment1/blob/master/figure/averagedailyactivity.png)
+#Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
 ```
-agg<-aggregate(final$steps,by=list(final$interval),FUN=mean)
-names(agg)<-c("Interval","Steps")
-plot(agg$Steps~agg$Interval,xlab="Steps",ylab="Intervals",main="Average Daily Activity",type="l")
+aggmean<-aggregate(final$steps,by=list(final$interval),FUN=mean)
+names(aggmean)<-c("Interval","Steps")
+plot(aggmean$Steps~aggmean$Interval,xlab="Steps",ylab="Intervals",main="Average Daily Activity",type="l")
+```
+![alt text](https://github.com/bilal-arif/RepData_PeerAssessment1/blob/master/figure/averagedailyactivity.png)
+#Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+```
+aggmean$Interval[which.max(aggmean$Steps)]
+#[1] 835
 ```
 
 ## Imputing missing values
+#Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+```
+sum(is.na(data))
+#[1] 2304
+```
 
+#Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+To fill the missing values, I use the mean for each 5-minue interval.
 
+#Create a new dataset that is equal to the original dataset but with the missing data filled in.
+```
+temp=data
 
+for(row in 1:length(temp$steps)){
+    if(is.na(temp[row,1])){
+        temp[row,1]=aggmean[aggmean$Interval==temp[row,3],2]
+    }
+}
+```
+#Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+```
+aggsum<-aggregate(temp$steps,by=list(temp$date),FUN=sum)
+names(aggsum)<-c("Date","Steps")
+hist(aggsum$Steps,breaks=20,xlab="Steps",main="Steps per day")
+```
+![alt text](https://github.com/bilal-arif/RepData_PeerAssessment1/blob/master/figure/missing.png)
+
+```
+mean(aggsum$Steps)
+#[1] 10766.19
+
+median(aggsum$Steps)
+#[1] 10766.19
+```
+After the the analysis we can notice that mean did not changed but however median became equal to the mean
 ## Are there differences in activity patterns between weekdays and weekends?
+#Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day. 
+```
+temp$dayOfWeek=weekdays(temp$date)
+temp$type=ifelse(temp$dayOfWeek=="Saturday"|temp$dayOfWeek=="Sunday","Weekend","Weekday")
+temp$type=as.factor(temp$type)
+temp$interval=as.factor(temp$interval)
+```
+#Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+```
+library(ggplot2)
+r=aggregate(temp$steps,list(as.factor(temp$interval),as.factor(temp$type)),mean)
+p <- ggplot(r, aes(x = as.integer(Group.1), y=x)) + geom_line()
+p + facet_grid(Group.2~.)+xlab("Interval")+ylab("Average Steps in Interval")
+```
+![alt text](https://github.com/bilal-arif/RepData_PeerAssessment1/blob/master/figure/weekdays.png)
